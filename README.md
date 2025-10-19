@@ -1,12 +1,12 @@
-# 🚛 Comprehensive Customer Intelligence Dashboard
+# Customer Intelligence Dashboard
 
 A production-ready, interactive dashboard for visualizing freight customer data and shipment requirements using Plotly Dash. This dashboard provides comprehensive insights into customer inquiries, contact information, and shipment analytics with dynamic filtering and clean, business-grade UI.
 
 ## ✨ Features
 
-- **📊 7 Interactive Charts**: Shipment origins, requirements distribution, industry breakdown, rate analysis, distance distribution, commodity analysis, timeline trends
+- **📊 6 Interactive Charts**: Shipment origins, requirements distribution, industry breakdown, rate analysis, distance distribution, commodity analysis, timeline trends
 - **👥 Comprehensive Customer Management**: Complete contact information, shipment requirements, and business intelligence
-- **🔍 Advanced Filtering**: Industry, shipment type, commodity, priority, source/destination countries, rate range, date range
+- **🔍 Advanced Filtering**: Industry, shipment type, commodity, priority, customer type, designation, source/destination countries, rate range, date range
 - **📥 Export Capabilities**: CSV download and contact export
 - **📱 Responsive Design**: Works on desktop, tablet, and mobile
 - **🚀 Production Ready**: Optimized for cloud deployment
@@ -101,6 +101,10 @@ The dataset includes comprehensive customer information:
 - Shipment Requirement (Container, FTL, LTL, Drayage, etc.)
 - Product / Commodity Type
 - Industry Type
+
+### **Customer Classification**
+- Customer Type (Freight Forwarding, NVOCCs, Drayage & Trucking, 3PLs, Container Leasing)
+- Designation (Manager, Director, Coordinator, Specialist roles)
 
 ### **Location Intelligence**
 - Source Location / Country / Region

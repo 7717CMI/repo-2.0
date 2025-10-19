@@ -55,7 +55,7 @@ app.layout = dbc.Container([
     # Header Section
     dbc.Row([
         dbc.Col([
-            html.H1("🚛 Comprehensive Customer Intelligence Dashboard", 
+            html.H1("Customer Intelligence Dashboard", 
                    className="text-center mb-2", 
                    style={'color': COLORS['primary'], 'fontWeight': 'bold'}),
             html.H4("Real-time tracking of freight inquiries, client contacts, and shipment requirements", 
@@ -86,7 +86,7 @@ app.layout = dbc.Container([
                                 value='All',
                                 className="mb-3"
                             )
-                        ], md=3),
+                        ], md=2),
                         dbc.Col([
                             html.Label("Shipment Requirement:", className="form-label"),
                             dcc.Dropdown(
@@ -96,7 +96,7 @@ app.layout = dbc.Container([
                                 value='All',
                                 className="mb-3"
                             )
-                        ], md=3),
+                        ], md=2),
                         dbc.Col([
                             html.Label("Commodity Type:", className="form-label"),
                             dcc.Dropdown(
@@ -106,7 +106,7 @@ app.layout = dbc.Container([
                                 value='All',
                                 className="mb-3"
                             )
-                        ], md=3),
+                        ], md=2),
                         dbc.Col([
                             html.Label("Priority Level:", className="form-label"),
                             dcc.Dropdown(
@@ -116,7 +116,27 @@ app.layout = dbc.Container([
                                 value='All',
                                 className="mb-3"
                             )
-                        ], md=3)
+                        ], md=2),
+                        dbc.Col([
+                            html.Label("Customer Type:", className="form-label"),
+                            dcc.Dropdown(
+                                id='customer-type-filter',
+                                options=[{'label': 'All Types', 'value': 'All'}] + 
+                                       [{'label': customer_type, 'value': customer_type} for customer_type in sorted(df['Customer Type'].unique()) if not df.empty],
+                                value='All',
+                                className="mb-3"
+                            )
+                        ], md=2),
+                        dbc.Col([
+                            html.Label("Designation:", className="form-label"),
+                            dcc.Dropdown(
+                                id='designation-filter',
+                                options=[{'label': 'All Designations', 'value': 'All'}] + 
+                                       [{'label': designation, 'value': designation} for designation in sorted(df['Designation'].unique()) if not df.empty],
+                                value='All',
+                                className="mb-3"
+                            )
+                        ], md=2)
                     ]),
                     dbc.Row([
                         dbc.Col([
@@ -128,7 +148,7 @@ app.layout = dbc.Container([
                                 value='All',
                                 className="mb-3"
                             )
-                        ], md=3),
+                        ], md=4),
                         dbc.Col([
                             html.Label("Destination Country:", className="form-label"),
                             dcc.Dropdown(
@@ -138,7 +158,7 @@ app.layout = dbc.Container([
                                 value='All',
                                 className="mb-3"
                             )
-                        ], md=3),
+                        ], md=4),
                         dbc.Col([
                             html.Label("Rate Range ($):", className="form-label"),
                             dcc.RangeSlider(
@@ -150,7 +170,9 @@ app.layout = dbc.Container([
                                 marks={i: f'${i:,.0f}' for i in range(0, int(df['Rate / Quote Requested ($)'].max() if not df.empty else 5000) + 1, 1000)},
                                 className="mb-3"
                             )
-                        ], md=3),
+                        ], md=4)
+                    ]),
+                    dbc.Row([
                         dbc.Col([
                             html.Label("Date Range:", className="form-label"),
                             dcc.DatePickerRange(
@@ -160,7 +182,7 @@ app.layout = dbc.Container([
                                 display_format='YYYY-MM-DD',
                                 className="mb-3"
                             )
-                        ], md=3)
+                        ], md=12)
                     ])
                 ])
             ], className="mb-4")
@@ -219,7 +241,7 @@ app.layout = dbc.Container([
         ], md=2)
     ], className="mb-4"),
     
-    # Enhanced Charts Section
+    # Enhanced Charts Section - 6 Charts Total
     dbc.Row([
         dbc.Col([
             dbc.Card([
@@ -312,6 +334,8 @@ app.layout = dbc.Container([
                             {'name': 'Shipment Req.', 'id': 'Shipment Requirement'},
                             {'name': 'Commodity', 'id': 'Product / Commodity Type'},
                             {'name': 'Industry', 'id': 'Industry Type'},
+                            {'name': 'Customer Type', 'id': 'Customer Type'},
+                            {'name': 'Designation', 'id': 'Designation'},
                             {'name': 'Source', 'id': 'Source Location / Country'},
                             {'name': 'Destination', 'id': 'Destination Location / Country'},
                             {'name': 'Distance (Km)', 'id': 'Distance to be Covered (Km)', 'type': 'numeric', 'format': {'specifier': ',.0f'}},
@@ -352,7 +376,7 @@ app.layout = dbc.Container([
 ], fluid=True, style={'backgroundColor': '#f8f9fa', 'minHeight': '100vh'})
 
 # Helper function to apply filters
-def apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
+def apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
     if df.empty:
         return df
     
@@ -369,6 +393,12 @@ def apply_filters(industry_filter, shipment_filter, commodity_filter, priority_f
     
     if priority_filter != 'All':
         filtered_df = filtered_df[filtered_df['Priority Level'] == priority_filter]
+    
+    if customer_type_filter != 'All':
+        filtered_df = filtered_df[filtered_df['Customer Type'] == customer_type_filter]
+    
+    if designation_filter != 'All':
+        filtered_df = filtered_df[filtered_df['Designation'] == designation_filter]
     
     if source_country_filter != 'All':
         filtered_df = filtered_df[filtered_df['Source Location / Country'] == source_country_filter]
@@ -403,17 +433,19 @@ def apply_filters(industry_filter, shipment_filter, commodity_filter, priority_f
      Input('shipment-filter', 'value'),
      Input('commodity-filter', 'value'),
      Input('priority-filter', 'value'),
+     Input('customer-type-filter', 'value'),
+     Input('designation-filter', 'value'),
      Input('source-country-filter', 'value'),
      Input('destination-country-filter', 'value'),
      Input('rate-range-filter', 'value'),
      Input('date-range-filter', 'start_date'),
      Input('date-range-filter', 'end_date')]
 )
-def update_kpi_cards(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
+def update_kpi_cards(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
     if df.empty:
         return "0", "$0.00", "0", "0", "N/A", "0%"
     
-    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
+    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
     
     # Calculate enhanced KPIs
     total_customers = len(filtered_df)
@@ -445,13 +477,15 @@ def update_kpi_cards(industry_filter, shipment_filter, commodity_filter, priorit
      Input('shipment-filter', 'value'),
      Input('commodity-filter', 'value'),
      Input('priority-filter', 'value'),
+     Input('customer-type-filter', 'value'),
+     Input('designation-filter', 'value'),
      Input('source-country-filter', 'value'),
      Input('destination-country-filter', 'value'),
      Input('rate-range-filter', 'value'),
      Input('date-range-filter', 'start_date'),
      Input('date-range-filter', 'end_date')]
 )
-def update_charts(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
+def update_charts(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
     if df.empty:
         empty_fig = go.Figure()
         empty_fig.update_layout(
@@ -461,7 +495,7 @@ def update_charts(industry_filter, shipment_filter, commodity_filter, priority_f
         )
         return [empty_fig] * 7
     
-    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
+    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
     
     # Source Country Chart
     source_counts = filtered_df['Source Location / Country'].value_counts()
@@ -580,23 +614,25 @@ def update_charts(industry_filter, shipment_filter, commodity_filter, priority_f
      Input('shipment-filter', 'value'),
      Input('commodity-filter', 'value'),
      Input('priority-filter', 'value'),
+     Input('customer-type-filter', 'value'),
+     Input('designation-filter', 'value'),
      Input('source-country-filter', 'value'),
      Input('destination-country-filter', 'value'),
      Input('rate-range-filter', 'value'),
      Input('date-range-filter', 'start_date'),
      Input('date-range-filter', 'end_date')]
 )
-def update_table_data(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
+def update_table_data(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
     if df.empty:
         return []
     
-    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
+    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
     
     # Prepare enhanced table data
     table_data = filtered_df[[
         'Customer ID', 'Company Name', 'Contact Person Name', 'Email', 'Phone',
         'Shipment Requirement', 'Product / Commodity Type', 'Industry Type',
-        'Source Location / Country', 'Destination Location / Country',
+        'Customer Type', 'Designation', 'Source Location / Country', 'Destination Location / Country',
         'Distance to be Covered (Km)', 'Rate / Quote Requested ($)',
         'Date of Inquiry', 'Priority Level', 'Status'
     ]].to_dict('records')
@@ -611,6 +647,8 @@ def update_table_data(industry_filter, shipment_filter, commodity_filter, priori
      State('shipment-filter', 'value'),
      State('commodity-filter', 'value'),
      State('priority-filter', 'value'),
+     State('customer-type-filter', 'value'),
+     State('designation-filter', 'value'),
      State('source-country-filter', 'value'),
      State('destination-country-filter', 'value'),
      State('rate-range-filter', 'value'),
@@ -618,11 +656,11 @@ def update_table_data(industry_filter, shipment_filter, commodity_filter, priori
      State('date-range-filter', 'end_date')],
     prevent_initial_call=True,
 )
-def download_csv(n_clicks, industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
+def download_csv(n_clicks, industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
     if df.empty or n_clicks is None:
         return None
     
-    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
+    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
     
     return dcc.send_data_frame(filtered_df.to_csv, "customer_intelligence.csv", index=False)
 
@@ -634,6 +672,8 @@ def download_csv(n_clicks, industry_filter, shipment_filter, commodity_filter, p
      State('shipment-filter', 'value'),
      State('commodity-filter', 'value'),
      State('priority-filter', 'value'),
+     State('customer-type-filter', 'value'),
+     State('designation-filter', 'value'),
      State('source-country-filter', 'value'),
      State('destination-country-filter', 'value'),
      State('rate-range-filter', 'value'),
@@ -641,14 +681,14 @@ def download_csv(n_clicks, industry_filter, shipment_filter, commodity_filter, p
      State('date-range-filter', 'end_date')],
     prevent_initial_call=True,
 )
-def download_contacts(n_clicks, industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
+def download_contacts(n_clicks, industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date):
     if df.empty or n_clicks is None:
         return None
     
-    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
+    filtered_df = apply_filters(industry_filter, shipment_filter, commodity_filter, priority_filter, customer_type_filter, designation_filter, source_country_filter, destination_country_filter, rate_range, start_date, end_date)
     
     # Export only contact information
-    contacts_df = filtered_df[['Company Name', 'Contact Person Name', 'Email', 'Phone', 'Industry Type', 'Source Location / Country', 'Priority Level']]
+    contacts_df = filtered_df[['Company Name', 'Contact Person Name', 'Email', 'Phone', 'Industry Type', 'Customer Type', 'Designation', 'Source Location / Country', 'Priority Level']]
     return dcc.send_data_frame(contacts_df.to_csv, "customer_contacts.csv", index=False)
 
 if __name__ == '__main__':
